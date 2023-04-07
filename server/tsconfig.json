@@ -24,7 +24,9 @@
     "baseUrl": "."
   },
   "exclude": ["node_modules"],
-  "include": ["./src/**/*.ts"],
+  "include": ["./src/**/*.ts"
+  //  "src/migrations/1669644574213-FakePosts.ts" 
+],
   "typeRoots": [
     "./src/types", // for express.session declaration merging 
     "./node_modules/@types" 

@@ -1,28 +1,45 @@
-import { Entity, OptionalProps, PrimaryKey, Property } from "@mikro-orm/core";
 import { Field, ObjectType } from "type-graphql";
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { Post } from "./Post";
+import { Upvote } from "./Upvote";
 
 @ObjectType()
 @Entity()
-export class User {
-    [OptionalProps]?: "updateAt" | "createdAt";
+export class User extends BaseEntity {
+  @Field()
+  @PrimaryGeneratedColumn()
+  id!: number;
 
-    @Field()
-    @PrimaryKey()
-    id!: number;
+  @Field(() => String)
+  @Column({ unique: true })
+  username!: string;
 
-    @Field(() => String)
-    @Property({ type: 'text', unique: true })
-    username!: string;
+  @Column()
+  password!: string;
 
-    @Property({ type: 'text' })
-    password!: string;
+  @Field()
+  @Column({ unique: true })
+  email!: string;
 
-    @Field(() => String)
-    @Property({ type: 'date' })
-    createdAt?: Date = new Date();
+  @OneToMany(() => Post, (post) => post.creator)
+  posts: Post[];
 
-    @Field(() => String)
-    @Property({ type: 'date', onUpdate: () => new Date() })
-    updatedAt?: Date = new Date();
+  @OneToMany(() => Upvote, (upvote) => upvote.post)
+  upvotes: Upvote[];
 
+  @Field(() => String)
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @Field(() => String)
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
