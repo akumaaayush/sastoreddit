@@ -1,4 +1,4 @@
-import { Post } from "../entities/Post";
+import { User } from "../entities/User";
 import {
   Arg,
   Ctx,
@@ -13,10 +13,11 @@ import {
   Root,
   UseMiddleware,
 } from "type-graphql";
-import { myContext } from "../types";
-import { isAuth } from "../middleware/auth";
 import { AppDataSource } from "../data-source";
+import { Post } from "../entities/Post";
 import { Upvote } from "../entities/Upvote";
+import { isAuth } from "../middleware/auth";
+import { myContext } from "../types";
 
 @InputType()
 class PostInput {
@@ -41,6 +42,28 @@ export class PostResolver {
   @FieldResolver(() => String)
   textSnippet(@Root() root: Post) {
     return root.text.slice(0, 50);
+  }
+
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: myContext) {
+    return userLoader.load(post.creatorId);
+  }
+
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { upvoteLoader, req }: myContext
+  ) {
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const upvote = await upvoteLoader.load({
+      postId: post.id,
+      userId: req.session.userId,
+    });
+
+    return upvote ? upvote.value : null;
   }
 
   //upvotes
@@ -135,8 +158,7 @@ export class PostResolver {
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
-    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { req }: myContext
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedPosts> {
     //fetching 1 extra than what user's fetching 20 -> 21
     const realLimit = Math.min(50, limit);
@@ -159,35 +181,15 @@ export class PostResolver {
 
     const replacements: any[] = [realLimitPlusOne];
 
-    if (req.session.userId) {
-      replacements.push(req.session.userId);
-    }
-
-    let cursorIdx = 3;
-
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
-      cursorIdx = replacements.length;
     }
 
     const posts = await AppDataSource.query(
       `
-    select p.*,
-    json_build_object(
-      'id', u.id,
-      'username', u.username,
-      'email', u.email,
-      'createdAt', u."createdAt",
-      'updatedAt', u."updatedAt"
-      ) creator,
-    ${
-      req.session.userId
-        ? '(select value from upvote where "userId" = $2 and "postId" = p.id) "voteStatus"'
-        : 'null as "voteStatus"'
-    }
+    select p.*
     from post p
-    inner join public.user u on u.id = p."creatorId"
-    ${cursor ? `where p."createdAt" < $${cursorIdx}` : ""}
+    ${cursor ? `where p."createdAt" < $2` : ""}
     order by p."createdAt" DESC
     limit $1
     `,
@@ -202,7 +204,7 @@ export class PostResolver {
   //single post query
   @Query(() => Post, { nullable: true })
   async post(@Arg("id", () => Int) id: number): Promise<Post | null> {
-    return Post.findOne({ where: { id }, relations: ["creator"] });
+    return Post.findOne({ where: { id } });
   }
 
   //createpost mutation
@@ -225,8 +227,7 @@ export class PostResolver {
     @Arg("text") text: string,
     @Ctx() { req }: myContext
   ): Promise<Post | null> {
-    
-    // COULDNT RETURN THE UPDATED POST 
+    // COULDNT RETURN THE UPDATED POST
     // const post = await Post.findOne({ where: { id } });
     // if (!post) {
     //   return null;

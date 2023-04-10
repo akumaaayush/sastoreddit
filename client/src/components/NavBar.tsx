@@ -1,13 +1,3 @@
-// type NavBarProps{
-
-// }
-
-// export const NavBar = ({ }: NavBarProps): JSX.Element => {
-//     return (
-//         <Flex
-//     )
-// }
-
 import NextLink from "next/link";
 import {
   Box,
@@ -21,8 +11,10 @@ import {
 } from "@chakra-ui/react";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 
 function NavBar() {
+  const router = useRouter();
   const [isServer, setIsServer] = useState(true);
   useEffect(() => setIsServer(false), []);
 
@@ -73,7 +65,10 @@ function NavBar() {
         </Box>
         <Button
           colorScheme="teal"
-          onClick={() => logout()}
+          onClick={async () => {
+            await logout();
+            router.reload();
+          }}
           isLoading={logoutFetching}
         >
           Logout

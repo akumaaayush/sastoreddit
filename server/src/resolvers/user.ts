@@ -1,22 +1,22 @@
-import {
-  Arg,
-  Ctx,
-  Field,
-  FieldResolver,
-  Mutation,
-  ObjectType,
-  Query,
-  Resolver,
-  Root,
-} from "type-graphql";
-import { myContext } from "src/types";
-import { User } from "../entities/User";
 import argon2 from "argon2";
-import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
-import { UsernamePasswordInput } from "./UsernamePasswordInput";
-import { validateRegister } from "../utils/validateRegister";
-import { sendEmail } from "../utils/sendEmail";
+import { myContext } from "src/types";
+import {
+    Arg,
+    Ctx,
+    Field,
+    FieldResolver,
+    Mutation,
+    ObjectType,
+    Query,
+    Resolver,
+    Root
+} from "type-graphql";
 import { v4 } from "uuid";
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
+import { User } from "../entities/User";
+import { sendEmail } from "../utils/sendEmail";
+import { validateRegister } from "../utils/validateRegister";
+import { UsernamePasswordInput } from "./UsernamePasswordInput";
 
 @ObjectType()
 class FieldError {

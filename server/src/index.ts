@@ -1,26 +1,28 @@
-import "reflect-metadata";
-import { COOKIE_NAME, __prod__ } from "./constants";
-import express from "express";
-import helmet from "helmet";
+import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+import helmet from "helmet";
+import Redis from "ioredis";
+import "reflect-metadata";
 import { buildSchema } from "type-graphql";
+import { COOKIE_NAME, __prod__ } from "./constants";
+import { AppDataSource } from "./data-source";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/posts";
-import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import { UserResolver } from "./resolvers/user";
-import Redis from "ioredis";
-import session from "express-session";
-import connectRedis from "connect-redis";
 import { myContext } from "./types";
-import cors from "cors";
-import { AppDataSource } from "./data-source";
+import { createUpvoteLoader } from "./utils/createUpvoteLoader";
+import { createUserLoader } from "./utils/createUserLoader";
 
 async function main(): Promise<void> {
   AppDataSource.initialize()
     .then(() => {
       // here you can start to work with your database
     })
-    .catch((error) => console.log(error))
+    .catch((error) => console.log(error));
 
   // await Post.delete({});
   const app = express();
@@ -66,7 +68,13 @@ async function main(): Promise<void> {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): myContext => ({ req, res, redis }),
+    context: ({ req, res }): myContext => ({
+      req,
+      res,
+      redis,
+      userLoader: createUserLoader(),
+      upvoteLoader: createUpvoteLoader(),
+    }),
     csrfPrevention: true,
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
     introspection: !__prod__,

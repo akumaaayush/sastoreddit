@@ -1,10 +1,7 @@
-import { Box, Flex, Heading } from "@chakra-ui/react";
+import { Box, Heading } from "@chakra-ui/react";
 import { withUrqlClient } from "next-urql";
-import { useRouter } from "next/router";
-import React from "react";
 import { EditDeletePostButtons } from "../../components/EditDeletePostButtons";
 import Layout from "../../components/Layout";
-import { usePostQuery } from "../../generated/graphql";
 import { createUrqlClient } from "../../utils/createUrqlClient";
 import useGetPostFromUrl from "../../utils/useGetPostFromUrl";
 

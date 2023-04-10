@@ -5,10 +5,7 @@ import React, { useState } from "react";
 import { EditDeletePostButtons } from "../components/EditDeletePostButtons";
 import Layout from "../components/Layout";
 import UpvoteSection from "../components/UpvoteSection";
-import {
-  useMeQuery,
-  usePostsQuery,
-} from "../generated/graphql";
+import { useMeQuery, usePostsQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 
 const Index = () => {
@@ -19,12 +16,17 @@ const Index = () => {
     cursor: null as null | string,
   });
 
-  const [{ data, fetching }] = usePostsQuery({
+  const [{ data, fetching, error }] = usePostsQuery({
     variables,
   });
 
   if (!fetching && !data) {
-    return <div>The query failed for some reason</div>;
+    return (
+      <div>
+        <div>The query failed for some reason</div>
+        <div>Errors: {error?.message}</div>
+      </div>
+    );
   }
 
   return (
