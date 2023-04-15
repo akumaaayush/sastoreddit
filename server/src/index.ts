@@ -16,11 +16,13 @@ import { UserResolver } from "./resolvers/user";
 import { myContext } from "./types";
 import { createUpvoteLoader } from "./utils/createUpvoteLoader";
 import { createUserLoader } from "./utils/createUserLoader";
+import "dotenv-safe/config";
 
 async function main(): Promise<void> {
   AppDataSource.initialize()
     .then(() => {
       // here you can start to work with your database
+      AppDataSource.runMigrations();
     })
     .catch((error) => console.log(error));
 
@@ -39,6 +41,7 @@ async function main(): Promise<void> {
       credentials: true,
     })
   );
+  app.set("proxy", 1);
 
   const RedisStore = connectRedis(session);
   const redis = new Redis();
@@ -56,9 +59,10 @@ async function main(): Promise<void> {
         httpOnly: true,
         secure: __prod__, //to be changed later
         sameSite: "lax",
+        // domain: "*", //set a domain
       },
       saveUninitialized: false,
-      secret: "osduhgpo1uh2oue1ou21291789asdas9",
+      secret: process.env.SESSION_SECRET,
       resave: false,
     })
   );
@@ -87,11 +91,11 @@ async function main(): Promise<void> {
     cors: false,
   });
 
-  console.log("-------------------SQL HERE-----------------------");
-  app.listen(3000, () => {
-    console.log("Listening on http://localhost:3000/graphql");
+  app.listen(parseInt(process.env.PORT), () => {
+    console.log(`Listening on http://localhost:${process.env.PORT}/graphql`);
     console.log(redis.status);
   });
+  // console.log("-------------------SQL HERE-----------------------");
 }
 
 main().catch((err) => {
