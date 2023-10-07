@@ -30,8 +30,9 @@ async function main(): Promise<void> {
   const app = express();
   app.use(
     helmet({
-      crossOriginEmbedderPolicy: __prod__,
-      contentSecurityPolicy: __prod__,
+      crossOriginEmbedderPolicy: false,
+      // contentSecurityPolicy: __prod__,
+      contentSecurityPolicy: false,
     })
   );
 
@@ -44,9 +45,8 @@ async function main(): Promise<void> {
   app.set("proxy", 1);
 
   const RedisStore = connectRedis(session);
-  const redis = new Redis();
-  // await redis.connect().catch(err => console.log(err))
-
+  // const redis = new Redis(process.env.REDIS_URL);
+  const redis = new Redis({ host: "redis" });
   app.use(
     session({
       name: COOKIE_NAME,
@@ -81,7 +81,8 @@ async function main(): Promise<void> {
     }),
     csrfPrevention: true,
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
-    introspection: !__prod__,
+    // introspection: !__prod__,
+    introspection: true,
   });
 
   await apolloServer.start();

@@ -1,20 +1,24 @@
-FROM node:16
+FROM node:lts-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package.json ./
 COPY yarn.lock ./
 
-RUN yarn
+RUN yarn config set "strict-ssl" false -g
+RUN yarn 
 
 COPY . ./
+
+RUN ls -lsa
 
 RUN yarn build
 
 ENV NODE_ENV=production
 
-EXPOSE 8080
+EXPOSE 3000
 
-CMD [ "node", "/dist/index.js" ]
+# CMD [ "node", "./dist/index.js" ]
+CMD [ "yarn", "dev" ]
 
 USER node

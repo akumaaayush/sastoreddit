@@ -1,0 +1,64 @@
+version: '3.9'
+services:
+  frontend:
+    image: sastoreddit:client
+    build:
+      context: ./client/
+      dockerfile: Dockerfile.old
+    ports:
+      - "8080:8080"
+    # networks:
+    #   - client-side
+    #   - server-side
+    volumes:
+      - ./:/app1
+      - /app1/node_modules
+      - /app1/.next
+    depends_on:
+      - backend
+
+  backend:
+    image: sastoreddit:server
+    # networks:
+    #   - client-side
+    #   - server-side
+    build:
+      context: ./server/
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   - ./server/src:/usr/src/backend
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    # networks:
+    #   - server-side
+    #   - client-side
+
+  db:
+    image: postgres:12-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=sastoreddit
+    # networks:
+    #   - server-side
+    #   - client-side
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+# networks:
+#   client-side: {}
+#   server-side: {}
+
+volumes:
+  db-data:
